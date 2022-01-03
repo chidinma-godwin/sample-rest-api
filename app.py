@@ -14,11 +14,6 @@ app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///data.db"
 api=Api(app)
 
-@app.before_first_request
-def create_tables():
-  db.create_all()
-  db.session.commit()
-
 jwt=JWT(app, authenticate, identity)
 
 api.add_resource(ItemList, '/items')
