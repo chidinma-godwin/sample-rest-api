@@ -16,16 +16,12 @@ class ItemList(Resource):
     data = ItemList.parser.parse_args()
     item = ItemModel.find_item(name)
 
-    updatedItem = ItemModel(name, data["price"])
-
-    if item:
-      try:
-        updatedItem.update()
-      except:
-        return {"msg": "Unexpected error"}, 500
+    if item is None:
+      item = ItemModel(name, data["price"])
     else:
-      updatedItem.insert()
-    return updatedItem.json()
+      item.price = data["price"]
+    item.save_to_db()
+    return item.json()
 
   def delete(self, name):
     try:
