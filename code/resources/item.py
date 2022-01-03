@@ -3,9 +3,10 @@ from flask_jwt import jwt_required
 
 from models.item import ItemModel
 
-class ItemList(Resource):
+class Item(Resource):
   parser = reqparse.RequestParser()
   parser.add_argument("price", type=float, required = True)
+  parser.add_argument("store_id", type=int, required=True, help="Every item must have a store id")
 
   @jwt_required()
   def get(self, name):
@@ -13,13 +14,14 @@ class ItemList(Resource):
     return item.json()
   
   def put(self, name):
-    data = ItemList.parser.parse_args()
+    data = Item.parser.parse_args()
     item = ItemModel.find_item(name)
 
     if item is None:
-      item = ItemModel(name, data["price"])
+      item = ItemModel(name, **data)
     else:
       item.price = data["price"]
+      item.store_id = data["store_id"]
     item.save_to_db()
     return item.json()
 
@@ -33,7 +35,7 @@ class ItemList(Resource):
 
 
 
-class Items(Resource):
+class ItemList(Resource):
    @jwt_required()
    def get(self):
     items = ItemModel.find_items()

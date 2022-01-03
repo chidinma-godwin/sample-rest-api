@@ -2,7 +2,8 @@ from os import name
 from flask import Flask
 from flask_restful import Api
 from flask_jwt import JWT
-from resources.item import Items, ItemList
+from resources.item import ItemList, Item
+from resources.store import Store, StoreList
 from resources.user import UserRegister
 
 from security import authenticate, identity
@@ -12,10 +13,18 @@ app.secret_key='95e49e9410af9ed8ca6854a148c1761d'
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///data.db"
 api=Api(app)
+
+@app.before_first_request
+def create_tables():
+  db.create_all()
+  db.session.commit()
+
 jwt=JWT(app, authenticate, identity)
 
-api.add_resource(Items, '/items')
-api.add_resource(ItemList, '/item/<string:name>')
+api.add_resource(ItemList, '/items')
+api.add_resource(Item, '/item/<string:name>')
+api.add_resource(StoreList, '/stores')
+api.add_resource(Store, '/store/<name>')
 api.add_resource(UserRegister, '/register')
 
 
