@@ -2,8 +2,8 @@ from os import name
 from flask import Flask
 from flask_restful import Api
 from flask_jwt import JWT
-from item import Items, ItemList
-from user import UserRegister
+from resources.item import Items, ItemList
+from resources.user import UserRegister
 
 from security import authenticate, identity
 
