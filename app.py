@@ -1,48 +1,34 @@
-from flask import Flask, jsonify, request
+from os import name
+from flask import Flask
+from flask_restful import Api
+from flask_jwt import JWT
+from resources.item import ItemList, Item
+from resources.store import Store, StoreList
+from resources.user import UserRegister
+
+from security import authenticate, identity
 
 app=Flask(__name__)
+app.secret_key='95e49e9410af9ed8ca6854a148c1761d'
+app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///data.db"
+api=Api(app)
 
-store = [
-  {"name": 'Store 1',
-  "items": [{"name": "Item 1", "price": 18.99, "sold": False}]}
-]
+@app.before_first_request
+def create_tables():
+  db.create_all()
+  db.session.commit()
 
-@app.route('/store/<string:name>')
-def get_store(name):
-  for x in store:
-    if x["name"] == name:
-      return jsonify(x)
-  return jsonify({"msg": "Store not found"})
+jwt=JWT(app, authenticate, identity)
 
-
-@app.route('/store')
-def get_stores():
-  return {'stores': store}
-
-@app.route('/store/<string:name>/item')
-def get_store_item(name):
-  for x in store:
-    if x["name"] == name:
-      return jsonify({"items": x["items"]})
-  return jsonify({"msg": "No store with the specified name"})
-
-@app.route('/store', methods=['POST'])
-def add_store():
-  req_body = request.get_json()
-  new_store = {"name": req_body["name"], "items": []}
-  store.append(new_store)
-  return jsonify(new_store)
+api.add_resource(ItemList, '/items')
+api.add_resource(Item, '/item/<string:name>')
+api.add_resource(StoreList, '/stores')
+api.add_resource(Store, '/store/<name>')
+api.add_resource(UserRegister, '/register')
 
 
-@app.route('/store/<string:name>/item', methods=['POST'])
-def add_store_item(name):
-  for x in store:
-    if x["name"] == name:
-      req_body = request.get_json()
-      x["items"].append(req_body["item"])
-      return jsonify(x)
-    return jsonify({"msg": "Store not found"})
-
-
-
-app.run(port=5000)
+if __name__ == "__main__":
+  from db import db
+  db.init_app(app)
+  app.run(port=5000, debug=True)
