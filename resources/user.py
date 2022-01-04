@@ -50,7 +50,7 @@ class User(Resource):
         user = UserModel.find_by_id(user_id)
         if user:
             user.delete_from_db()
-            return {"msg": DELETED.format("user {user_id}")}
+            return {"msg": DELETED.format(f"user {user_id}")}
         return {"msg": NOT_FOUND.format("user")}, 404
 
 

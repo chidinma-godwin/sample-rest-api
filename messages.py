@@ -1,6 +1,6 @@
 REQUIRED_FIELD = "The '{}' field is required"
 NOT_FOUND = "No '{}' found"
-DELETED = "'{}' deleted"
+DELETED = "{} deleted"
 UNEXPECTED_ERROR = "An unexpected error has occured"
 NO_ADMIN_ACCESS = "Only the admin has access to this endpoint"
 UNAUTHORISED = "Not authorised"
