@@ -1,7 +1,25 @@
 from flask_restful import Resource, reqparse
-import sqlite3
+from flask_jwt import jwt_required
 
 from models.user import UserModel
+
+class User(Resource):
+  @jwt_required()
+  def get(self, user_id):
+    user = UserModel.find_by_id(user_id)
+    if user:
+      return user.json()
+    return {"msg": "User not found"}, 404
+
+  @jwt_required()
+  def delete(self, user_id):
+    user = UserModel.find_by_id(user_id)
+    if user:
+      user.delete_from_db()
+      return {"msg": "User deleted"}
+    return {"msg": "User not found"}, 404
+    
+
 
 class UserRegister(Resource):
   parser = reqparse.RequestParser()
@@ -22,3 +40,4 @@ class UserRegister(Resource):
       return {"msg": "Unexpected error"}, 500
 
     return {"msg": "User created successfully"}, 201
+    

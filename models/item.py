@@ -22,7 +22,7 @@ class ItemModel(db.Model):
     return cls.query.filter_by(name=name).first()
 
   def json(self):
-    return {"name": self.name, "price": self.price}
+    return {"name": self.name, "price": self.price, "store_id": self.store_id}
 
   def save_to_db(self):
     db.session.add(self)
