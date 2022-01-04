@@ -14,8 +14,9 @@ class Item(Resource):
         "store_id", type=int, required=True, help=REQUIRED_FIELD.format("store_id")
     )
 
+    @classmethod
     @jwt_required(optional=True)
-    def get(self, name: str):
+    def get(cls, name: str):
         item = ItemModel.find_item(name)
         if item:
             claims = get_jwt()
@@ -25,7 +26,8 @@ class Item(Resource):
 
         return {"msg": NOT_FOUND.format("item")}, 404
 
-    def put(self, name: str):
+    @classmethod
+    def put(cls, name: str):
         data = Item.parser.parse_args()
         item = ItemModel.find_item(name)
 
@@ -37,7 +39,8 @@ class Item(Resource):
         item.save_to_db()
         return item.json()
 
-    def delete(self, name: str):
+    @classmethod
+    def delete(cls, name: str):
         try:
             item = ItemModel.find_item(name)
             item.delete_item()
@@ -47,8 +50,9 @@ class Item(Resource):
 
 
 class ItemList(Resource):
+    @classmethod
     @jwt_required()
-    def get(self):
+    def get(cls):
         items = ItemModel.find_items()
         if items:
             claims = get_jwt()

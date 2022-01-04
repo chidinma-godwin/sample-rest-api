@@ -6,12 +6,14 @@ from messages import DELETED, NOT_FOUND, UNEXPECTED_ERROR
 
 
 class Store(Resource):
+    @classmethod
     @jwt_required()
-    def get(self, name: str):
+    def get(cls, name: str):
         store = StoreModel.find_store(name)
         return store.json()
 
-    def post(self, name: str):
+    @classmethod
+    def post(cls, name: str):
         store = StoreModel.find_store(name)
 
         if store is None:
@@ -21,7 +23,8 @@ class Store(Resource):
         store.save_to_db()
         return store.json()
 
-    def delete(self, name: str):
+    @classmethod
+    def delete(cls, name: str):
         try:
             store = StoreModel.find_store(name)
             store.delete_store()
@@ -31,8 +34,9 @@ class Store(Resource):
 
 
 class StoreList(Resource):
+    @classmethod
     @jwt_required()
-    def get(self):
+    def get(cls):
         stores = StoreModel.find_stores()
         if stores:
             return {"stores": [store.json() for store in stores]}

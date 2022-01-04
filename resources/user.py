@@ -36,15 +36,17 @@ _user_parser.add_argument(
 
 # TODO: Use bcrypt
 class User(Resource):
+    @classmethod
     @jwt_required()
-    def get(self, user_id: int):
+    def get(cls, user_id: int):
         user = UserModel.find_by_id(user_id)
         if user and current_user.id == user_id:
             return user.json()
         return {"msg": UNAUTHORISED}, 401
 
+    @classmethod
     @jwt_required()
-    def delete(self, user_id: int):
+    def delete(cls, user_id: int):
         user = UserModel.find_by_id(user_id)
         if user:
             user.delete_from_db()
@@ -53,8 +55,9 @@ class User(Resource):
 
 
 class UserList(Resource):
+    @classmethod
     @jwt_required(fresh=True)
-    def get(self):
+    def get(cls):
         claims = get_jwt()
         if claims["is_admin"]:
             users = UserModel.find_all()
@@ -63,7 +66,8 @@ class UserList(Resource):
 
 
 class UserRegister(Resource):
-    def post(self):
+    @classmethod
+    def post(cls):
         data = _user_parser.parse_args()
 
         if UserModel.find_by_username(data["username"]):
@@ -80,7 +84,8 @@ class UserRegister(Resource):
 
 
 class UserLogin(Resource):
-    def post(self):
+    @classmethod
+    def post(cls):
         data = _user_parser.parse_args()
         user = UserModel.find_by_username(data["username"])
 
@@ -93,8 +98,9 @@ class UserLogin(Resource):
 
 
 class Logout(Resource):
+    @classmethod
     @jwt_required()
-    def post(self):
+    def post(cls):
         jti = get_jwt()["jti"]
         token_block = TokenBlockModel(jti, datetime.now(timezone.utc))
         token_block.save_to_block_list()
@@ -102,8 +108,9 @@ class Logout(Resource):
 
 
 class TokenRefresh(Resource):
+    @classmethod
     @jwt_required(refresh=True)
-    def post(self):
+    def post(cls):
         current_user_id = get_jwt_identity()
         new_token = create_access_token(current_user_id, fresh=False)
         return {"access_token": new_token}
