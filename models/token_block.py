@@ -4,7 +4,7 @@ class TokenBlocklist(db.Model):
     __tablename__ = "blocklist"
 
     id = db.Column(db.Integer, primary_key=True)
-    jti = db.Column(db.String(36), nullable=False)
+    jti = db.Column(db.String(36), nullable=False, unique = True)
     created_at = db.Column(db.DateTime, nullable=False)
 
     def __init__(self, jti, created_at):
