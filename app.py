@@ -8,6 +8,7 @@ from resources.store import Store, StoreList
 from resources.user import Logout, TokenRefresh, User, UserRegister, UserLogin, UserList
 from models.token_block import TokenBlockModel
 from models.user import UserModel
+from messages import TOKEN_REVOKED_ERR, TOKEN_REVOKED_MSG
 
 app = Flask(__name__)
 app.secret_key = os.environ.get("APP_SECRET")
@@ -48,7 +49,7 @@ def check_if_token_in_blacklist(jwt_header, jwt_payload):
 
 @jwt.revoked_token_loader
 def revoked_token_callback(jwt_header, jwt_payload):
-    return jsonify({"msg": "The token has been revoked", "err": "Token revoked"})
+    return jsonify({"msg": TOKEN_REVOKED_MSG, "err": TOKEN_REVOKED_ERR})
 
 
 api.add_resource(ItemList, "/items")

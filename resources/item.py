@@ -2,13 +2,16 @@ from flask_restful import Resource, reqparse
 from flask_jwt_extended import jwt_required, get_jwt
 
 from models.item import ItemModel
+from messages import REQUIRED_FIELD, NOT_FOUND, UNEXPECTED_ERROR, DELETED
 
 
 class Item(Resource):
     parser = reqparse.RequestParser()
-    parser.add_argument("price", type=float, required=True)
     parser.add_argument(
-        "store_id", type=int, required=True, help="Every item must have a store id"
+        "price", type=float, required=True, help=REQUIRED_FIELD.format("price")
+    )
+    parser.add_argument(
+        "store_id", type=int, required=True, help=REQUIRED_FIELD.format("store_id")
     )
 
     @jwt_required(optional=True)
@@ -20,7 +23,7 @@ class Item(Resource):
                 return item.json()
             return {"name": item.name, "price": item.price}
 
-        return {"msg": "Item not found"}, 404
+        return {"msg": NOT_FOUND.format("item")}, 404
 
     def put(self, name: str):
         data = Item.parser.parse_args()
@@ -38,9 +41,9 @@ class Item(Resource):
         try:
             item = ItemModel.find_item(name)
             item.delete_item()
-        except Exception as e:
-            return {"msg": f"Unexpected error - {e}"}, 500
-        return {"msg": "Item deleted"}, 200
+        except:
+            return {"msg": UNEXPECTED_ERROR}, 500
+        return {"msg": DELETED.format("item")}, 200
 
 
 class ItemList(Resource):
@@ -54,4 +57,4 @@ class ItemList(Resource):
             return {
                 "items": [{"name": item.name, "price": item.price} for item in items]
             }, 200
-        return {"msg": "No items found"}, 404
+        return {"msg": NOT_FOUND.format("item")}, 404

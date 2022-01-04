@@ -10,13 +10,29 @@ from flask_jwt_extended import (
 from werkzeug.security import safe_str_cmp
 from datetime import datetime, timezone
 
-from models.token_block import TokenBlockModel
 
+from models.token_block import TokenBlockModel
+from messages import (
+    DELETED,
+    INVALID_CREDENTIALS,
+    LOGGED_OUT,
+    NO_ADMIN_ACCESS,
+    NOT_FOUND,
+    REQUIRED_FIELD,
+    UNAUTHORISED,
+    UNEXPECTED_ERROR,
+    USER_ALREADY_EXIST,
+    USER_CREATED,
+)
 from models.user import UserModel
 
 _user_parser = reqparse.RequestParser()
-_user_parser.add_argument("username", type=str, required=True)
-_user_parser.add_argument("password", type=str, required=True)
+_user_parser.add_argument(
+    "username", type=str, required=True, help=REQUIRED_FIELD.format("username")
+)
+_user_parser.add_argument(
+    "password", type=str, required=True, help=REQUIRED_FIELD.format("password")
+)
 
 # TODO: Use bcrypt
 class User(Resource):
@@ -25,15 +41,15 @@ class User(Resource):
         user = UserModel.find_by_id(user_id)
         if user and current_user.id == user_id:
             return user.json()
-        return {"msg": "Unauthorised"}, 401
+        return {"msg": UNAUTHORISED}, 401
 
     @jwt_required()
     def delete(self, user_id: int):
         user = UserModel.find_by_id(user_id)
         if user:
             user.delete_from_db()
-            return {"msg": "User deleted"}
-        return {"msg": "User not found"}, 404
+            return {"msg": DELETED.format("user {user_id}")}
+        return {"msg": NOT_FOUND.format("user")}, 404
 
 
 class UserList(Resource):
@@ -43,7 +59,7 @@ class UserList(Resource):
         if claims["is_admin"]:
             users = UserModel.find_all()
             return [{"id": user.id, "username": user.username} for user in users]
-        return {"msg": "Only the admin has access to this endpoint"}
+        return {"msg": NO_ADMIN_ACCESS}
 
 
 class UserRegister(Resource):
@@ -51,16 +67,16 @@ class UserRegister(Resource):
         data = _user_parser.parse_args()
 
         if UserModel.find_by_username(data["username"]):
-            return {"msg": "Username already exists"}, 400
+            return {"msg": USER_ALREADY_EXIST}, 400
 
         newUser = UserModel(data["username"], data["password"])
 
         try:
             newUser.save_user()
         except:
-            return {"msg": "Unexpected error"}, 500
+            return {"msg": UNEXPECTED_ERROR}, 500
 
-        return {"msg": "User created successfully"}, 201
+        return {"msg": USER_CREATED}, 201
 
 
 class UserLogin(Resource):
@@ -73,7 +89,7 @@ class UserLogin(Resource):
             refresh_token = create_refresh_token(user.id)
             return {"access_token": access_token, "refresh_token": refresh_token}
 
-        return {"msg": "Invalid Credentials"}, 401
+        return {"msg": INVALID_CREDENTIALS}, 401
 
 
 class Logout(Resource):
@@ -82,7 +98,7 @@ class Logout(Resource):
         jti = get_jwt()["jti"]
         token_block = TokenBlockModel(jti, datetime.now(timezone.utc))
         token_block.save_to_block_list()
-        return {"msg": "You've been logged out!"}
+        return {"msg": LOGGED_OUT}
 
 
 class TokenRefresh(Resource):
