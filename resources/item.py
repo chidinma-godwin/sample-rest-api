@@ -13,7 +13,6 @@ class Item(Resource):
     item = ItemModel.find_item(name)
     if item:
       claims = get_jwt()
-      print(claims != {} and claims["is_admin"])
       if claims != {} and claims["is_admin"]:
         return item.json()
       return {"name": item.name, "price": item.price}

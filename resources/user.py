@@ -1,6 +1,10 @@
 from flask_restful import Resource, reqparse
-from flask_jwt_extended import jwt_required, create_access_token, create_refresh_token, current_user, get_jwt
+from flask_jwt_extended import (jwt_required, create_access_token,
+     create_refresh_token, current_user, get_jwt, get_jwt_identity, get_jti)
 from werkzeug.security import safe_str_cmp
+from datetime import datetime, timezone
+
+from models.token_block import TokenBlocklist
 
 from models.user import UserModel
 
@@ -13,7 +17,6 @@ class User(Resource):
   @jwt_required()
   def get(self, user_id):
     user = UserModel.find_by_id(user_id)
-    print('current user', current_user)
     if user and current_user.id == user_id:
       return user.json()
     return {"msg": "Unauthorised"}, 401
@@ -28,10 +31,9 @@ class User(Resource):
 
 
 class UserList(Resource):
-  @jwt_required()
+  @jwt_required(fresh=True)
   def get(self):
     claims = get_jwt()
-    print(claims)
     if claims["is_admin"]:
       users = UserModel.find_all()
       return [{"id": user.id, "username": user.username} for user in users]
@@ -67,5 +69,22 @@ class UserLogin(Resource):
       return { "access_token": access_token, "refresh_token": refresh_token }
 
     return {"msg": "Invalid Credentials"}, 401
+
+
+class Logout(Resource):
+  @jwt_required()
+  def post(self):
+    jti = get_jwt()['jti']
+    token_block = TokenBlocklist(jti, datetime.now(timezone.utc))
+    token_block.save_to_block_list()
+    return {"msg": "You've been logged out!"}
+
+  
+class TokenRefresh(Resource):
+  @jwt_required(refresh=True)
+  def post(self):
+    current_user_id = get_jwt_identity()
+    new_token = create_access_token(current_user_id, fresh=False)
+    return {"access_token": new_token}
 
     
