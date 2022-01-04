@@ -4,7 +4,7 @@ from flask_jwt_extended import (jwt_required, create_access_token,
 from werkzeug.security import safe_str_cmp
 from datetime import datetime, timezone
 
-from models.token_block import TokenBlocklist
+from models.token_block import TokenBlockModel
 
 from models.user import UserModel
 
@@ -15,14 +15,14 @@ _user_parser.add_argument("password", type=str, required = True)
 # TODO: Use bcrypt
 class User(Resource):
   @jwt_required()
-  def get(self, user_id):
+  def get(self, user_id: int):
     user = UserModel.find_by_id(user_id)
     if user and current_user.id == user_id:
       return user.json()
     return {"msg": "Unauthorised"}, 401
 
   @jwt_required()
-  def delete(self, user_id):
+  def delete(self, user_id: int):
     user = UserModel.find_by_id(user_id)
     if user:
       user.delete_from_db()
@@ -75,7 +75,7 @@ class Logout(Resource):
   @jwt_required()
   def post(self):
     jti = get_jwt()['jti']
-    token_block = TokenBlocklist(jti, datetime.now(timezone.utc))
+    token_block = TokenBlockModel(jti, datetime.now(timezone.utc))
     token_block.save_to_block_list()
     return {"msg": "You've been logged out!"}
 

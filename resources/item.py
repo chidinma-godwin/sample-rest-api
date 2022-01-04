@@ -9,7 +9,7 @@ class Item(Resource):
   parser.add_argument("store_id", type=int, required=True, help="Every item must have a store id")
 
   @jwt_required(optional=True)
-  def get(self, name):
+  def get(self, name: str):
     item = ItemModel.find_item(name)
     if item:
       claims = get_jwt()
@@ -19,7 +19,7 @@ class Item(Resource):
 
     return {"msg": "Item not found"}, 404
   
-  def put(self, name):
+  def put(self, name: str):
     data = Item.parser.parse_args()
     item = ItemModel.find_item(name)
 
@@ -31,7 +31,7 @@ class Item(Resource):
     item.save_to_db()
     return item.json()
 
-  def delete(self, name):
+  def delete(self, name: str):
     try:
       item = ItemModel.find_item(name)
       item.delete_item()

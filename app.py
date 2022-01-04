@@ -6,9 +6,8 @@ import os
 from resources.item import ItemList, Item
 from resources.store import Store, StoreList
 from resources.user import Logout, TokenRefresh, User, UserRegister, UserLogin, UserList
-from models.token_block import TokenBlocklist
+from models.token_block import TokenBlockModel
 from models.user import UserModel
-
 
 app=Flask(__name__)
 app.secret_key=os.environ.get("APP_SECRET")
@@ -38,7 +37,7 @@ def user_lookup_callback(_jwt_header, jwt_data):
 
 @jwt.token_in_blocklist_loader
 def check_if_token_in_blacklist(jwt_header, jwt_payload):
-  token = TokenBlocklist.find_by_jti(jwt_payload['jti'])
+  token = TokenBlockModel.find_by_jti(jwt_payload['jti'])
   if token:
     return True
 

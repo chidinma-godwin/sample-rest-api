@@ -5,11 +5,11 @@ from models.store import StoreModel
 
 class Store(Resource):
   @jwt_required()
-  def get(self, name):
+  def get(self, name: str):
     store = StoreModel.find_store(name)
     return store.json()
   
-  def post(self, name):
+  def post(self, name: str):
     store = StoreModel.find_store(name)
 
     if store is None:
@@ -19,7 +19,7 @@ class Store(Resource):
     store.save_to_db()
     return store.json()
 
-  def delete(self, name):
+  def delete(self, name: str):
     try:
       store = StoreModel.find_store(name)
       store.delete_store()
