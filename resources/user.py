@@ -1,15 +1,22 @@
 from flask_restful import Resource, reqparse
-from flask_jwt import jwt_required
+from flask_jwt_extended import jwt_required, create_access_token, create_refresh_token, current_user, get_jwt
+from werkzeug.security import safe_str_cmp
 
 from models.user import UserModel
 
+_user_parser = reqparse.RequestParser()
+_user_parser.add_argument("username", type=str, required = True)
+_user_parser.add_argument("password", type=str, required = True)
+
+# TODO: Use bcrypt
 class User(Resource):
   @jwt_required()
   def get(self, user_id):
     user = UserModel.find_by_id(user_id)
-    if user:
+    print('current user', current_user)
+    if user and current_user.id == user_id:
       return user.json()
-    return {"msg": "User not found"}, 404
+    return {"msg": "Unauthorised"}, 401
 
   @jwt_required()
   def delete(self, user_id):
@@ -18,16 +25,23 @@ class User(Resource):
       user.delete_from_db()
       return {"msg": "User deleted"}
     return {"msg": "User not found"}, 404
+
+
+class UserList(Resource):
+  @jwt_required()
+  def get(self):
+    claims = get_jwt()
+    print(claims)
+    if claims["is_admin"]:
+      users = UserModel.find_all()
+      return [{"id": user.id, "username": user.username} for user in users]
+    return {"msg": "Only the admin has access to this endpoint"}
     
 
-
 class UserRegister(Resource):
-  parser = reqparse.RequestParser()
-  parser.add_argument("username", type=str, required = True)
-  parser.add_argument("password", type=str, required = True)
 
   def post(self):
-    data = UserRegister.parser.parse_args()
+    data = _user_parser.parse_args()
 
     if UserModel.find_by_username(data["username"]):
       return {"msg": "Username already exists"}, 400
@@ -40,4 +54,18 @@ class UserRegister(Resource):
       return {"msg": "Unexpected error"}, 500
 
     return {"msg": "User created successfully"}, 201
+
+class UserLogin(Resource):
+  
+  def post(self):
+    data = _user_parser.parse_args()
+    user = UserModel.find_by_username(data["username"])
+
+    if user and safe_str_cmp(user.password, data["password"]):
+      access_token = create_access_token(identity=user.id, fresh=True)
+      refresh_token = create_refresh_token(user.id)
+      return { "access_token": access_token, "refresh_token": refresh_token }
+
+    return {"msg": "Invalid Credentials"}, 401
+
     

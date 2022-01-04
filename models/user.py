@@ -14,6 +14,10 @@ class UserModel(db.Model):
     return {"id": self.id, "username": self.username}
 
   @classmethod
+  def find_all(cls):
+    return cls.query.all()
+
+  @classmethod
   def find_by_username(cls, username):
     return cls.query.filter_by(username=username).first()
 
