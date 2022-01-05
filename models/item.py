@@ -1,7 +1,5 @@
-from typing import Dict, List, Union
+from typing import List
 from db import db
-
-ItemJSON = Dict[str, Union[str, float, int]]
 
 
 class ItemModel(db.Model):
@@ -24,9 +22,6 @@ class ItemModel(db.Model):
     @classmethod
     def find_item(cls, name: str) -> "ItemModel":
         return cls.query.filter_by(name=name).first()
-
-    def json(self) -> ItemJSON:
-        return {"name": self.name, "price": self.price, "store_id": self.store_id}
 
     def save_to_db(self) -> None:
         db.session.add(self)

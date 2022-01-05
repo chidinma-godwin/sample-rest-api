@@ -1,8 +1,6 @@
-from typing import Dict, List, Union
+from typing import List
 
 from db import db
-
-UserJSON = Dict[str, Union[int, str]]
 
 
 class UserModel(db.Model):
@@ -14,9 +12,6 @@ class UserModel(db.Model):
     def __init__(self, username=str, password=str) -> None:
         self.username = username
         self.password = password
-
-    def json(self) -> UserJSON:
-        return {"id": self.id, "username": self.username}
 
     @classmethod
     def find_all(cls) -> List["UserModel"]:

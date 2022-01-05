@@ -3,6 +3,9 @@ from flask_jwt_extended import jwt_required
 
 from models.store import StoreModel
 from messages import DELETED, NOT_FOUND, UNEXPECTED_ERROR
+from schemas.store import StoreSchema
+
+store_schema = StoreSchema()
 
 
 class Store(Resource):
@@ -10,7 +13,7 @@ class Store(Resource):
     @jwt_required()
     def get(cls, name: str):
         store = StoreModel.find_store(name)
-        return store.json()
+        return store_schema.dump(store)
 
     @classmethod
     def post(cls, name: str):
@@ -21,7 +24,7 @@ class Store(Resource):
         else:
             store.name = name
         store.save_to_db()
-        return store.json()
+        return store_schema.dump(store)
 
     @classmethod
     def delete(cls, name: str):
@@ -39,5 +42,5 @@ class StoreList(Resource):
     def get(cls):
         stores = StoreModel.find_stores()
         if stores:
-            return {"stores": [store.json() for store in stores]}
+            return {"stores": store_schema.dump(stores, many=True)}
         return {"msg": NOT_FOUND.format("store")}, 404

@@ -1,4 +1,5 @@
-from flask_restful import Resource, reqparse
+from flask_restful import Resource
+from flask import request
 from flask_jwt_extended import (
     jwt_required,
     create_access_token,
@@ -25,14 +26,9 @@ from messages import (
     USER_CREATED,
 )
 from models.user import UserModel
+from schemas.user import UserSchema
 
-_user_parser = reqparse.RequestParser()
-_user_parser.add_argument(
-    "username", type=str, required=True, help=REQUIRED_FIELD.format("username")
-)
-_user_parser.add_argument(
-    "password", type=str, required=True, help=REQUIRED_FIELD.format("password")
-)
+user_schema = UserSchema()
 
 # TODO: Use bcrypt
 class User(Resource):
@@ -41,7 +37,7 @@ class User(Resource):
     def get(cls, user_id: int):
         user = UserModel.find_by_id(user_id)
         if user and current_user.id == user_id:
-            return user.json()
+            return user_schema.dump(user)
         return {"msg": UNAUTHORISED}, 401
 
     @classmethod
@@ -61,14 +57,14 @@ class UserList(Resource):
         claims = get_jwt()
         if claims["is_admin"]:
             users = UserModel.find_all()
-            return [{"id": user.id, "username": user.username} for user in users]
+            return user_schema.dump(users, many=True)
         return {"msg": NO_ADMIN_ACCESS}
 
 
 class UserRegister(Resource):
     @classmethod
     def post(cls):
-        data = _user_parser.parse_args()
+        data = user_schema.load(request.get_json())
 
         if UserModel.find_by_username(data["username"]):
             return {"msg": USER_ALREADY_EXIST}, 400
@@ -86,7 +82,7 @@ class UserRegister(Resource):
 class UserLogin(Resource):
     @classmethod
     def post(cls):
-        data = _user_parser.parse_args()
+        data = user_schema.load(request.get_json())
         user = UserModel.find_by_username(data["username"])
 
         if user and safe_str_cmp(user.password, data["password"]):
