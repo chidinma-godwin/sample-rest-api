@@ -1,10 +1,11 @@
-from typing import Union
-from marshmallow import Schema, fields
+from ma import ma
 
+from models.store import StoreModel
 from schemas.item import ItemSchema
 
 
-class StoreSchema(Schema):
-    id = fields.Int()
-    name = fields.Str(required=True)
-    items = fields.List(fields.Nested(ItemSchema))
+class StoreSchema(ma.SQLAlchemyAutoSchema):
+    items = ma.List(ma.Nested(ItemSchema))
+
+    class Meta:
+        model = StoreModel

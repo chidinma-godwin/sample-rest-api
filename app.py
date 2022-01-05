@@ -1,7 +1,8 @@
+import os
 from flask import Flask, jsonify
 from flask_restful import Api
 from flask_jwt_extended import JWTManager
-import os
+from marshmallow import ValidationError
 
 from resources.item import ItemList, Item
 from resources.store import Store, StoreList
@@ -9,6 +10,7 @@ from resources.user import Logout, TokenRefresh, User, UserRegister, UserLogin, 
 from models.token_block import TokenBlockModel
 from models.user import UserModel
 from messages import TOKEN_REVOKED_ERR, TOKEN_REVOKED_MSG
+from ma import ma
 
 app = Flask(__name__)
 app.secret_key = os.environ.get("APP_SECRET")
@@ -16,6 +18,12 @@ app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///data.db"
 app.config["PROPAGATE_EXCEPTIONS"] = True
 api = Api(app)
+
+
+@app.errorhandler(ValidationError)
+def handle_marshmallow_validation_error(err):
+    return jsonify(err.messages), 400
+
 
 jwt = JWTManager(app)
 
@@ -68,4 +76,5 @@ if __name__ == "__main__":
     from db import db
 
     db.init_app(app)
+    ma.init_app(app)
     app.run(port=5000, debug=True)

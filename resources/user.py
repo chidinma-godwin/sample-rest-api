@@ -8,6 +8,7 @@ from flask_jwt_extended import (
     get_jwt,
     get_jwt_identity,
 )
+from marshmallow.exceptions import ValidationError
 from werkzeug.security import safe_str_cmp
 from datetime import datetime, timezone
 
@@ -69,7 +70,7 @@ class UserRegister(Resource):
         if UserModel.find_by_username(data["username"]):
             return {"msg": USER_ALREADY_EXIST}, 400
 
-        newUser = UserModel(data["username"], data["password"])
+        newUser = UserModel(**data)
 
         try:
             newUser.save_user()

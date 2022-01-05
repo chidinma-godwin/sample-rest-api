@@ -20,7 +20,7 @@ class Store(Resource):
         store = StoreModel.find_store(name)
 
         if store is None:
-            store = StoreModel(name)
+            store = StoreModel(name=name)
         else:
             store.name = name
         store.save_to_db()

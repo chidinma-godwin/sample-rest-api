@@ -24,11 +24,13 @@ class Item(Resource):
 
     @classmethod
     def put(cls, name: str):
-        data = item_schema.load(request.get_json())
+        item_json = request.get_json()
+        item_json["name"] = name
+        data = item_schema.load(item_json)
         item = ItemModel.find_item(name)
 
         if item is None:
-            item = ItemModel(name, **data)
+            item = ItemModel(**data)
         else:
             item.price = data["price"]
             item.store_id = data["store_id"]

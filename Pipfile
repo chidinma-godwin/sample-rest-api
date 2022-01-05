@@ -10,6 +10,8 @@ Flask-SQLAlchemy = "*"
 Flask-JWT-Extended = "*"
 uWSGI = "*"
 marshmallow = "*"
+flask-marshmallow = "*"
+marshmallow-sqlalchemy = "*"
 
 [dev-packages]
 black = "*"
