@@ -23,7 +23,7 @@ from ma import ma
 app = Flask(__name__)
 app.secret_key = os.environ.get("APP_SECRET")
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
-app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///data.db"
+app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get("DATABASE_URI")
 app.config["PROPAGATE_EXCEPTIONS"] = True
 api = Api(app)
 

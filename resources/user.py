@@ -9,9 +9,9 @@ from flask_jwt_extended import (
     get_jwt,
     get_jwt_identity,
 )
-from marshmallow.exceptions import ValidationError
 from werkzeug.security import safe_str_cmp
 from datetime import datetime, timezone
+from libs.mailgun import MailgunException
 
 
 from models.token_block import TokenBlockModel
@@ -22,6 +22,7 @@ from messages import (
     NO_ADMIN_ACCESS,
     NOT_ACTIVATED,
     NOT_FOUND,
+    REGISTRATION_FAILED,
     UNAUTHORISED,
     UNEXPECTED_ERROR,
     USER_ALREADY_EXIST,
@@ -78,6 +79,9 @@ class UserRegister(Resource):
         try:
             newUser.save_user()
             newUser.send_confirmation_email()
+        except MailgunException as e:
+            newUser.delete_from_db()
+            return {"msg": REGISTRATION_FAILED}
         except:
             traceback.print_exc()
             return {"msg": UNEXPECTED_ERROR}, 500

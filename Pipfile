@@ -16,6 +16,7 @@ requests = "*"
 
 [dev-packages]
 black = "*"
+python-dotenv = "*"
 
 [requires]
 python_version = "3.9"
