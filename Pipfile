@@ -1,0 +1,16 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+Flask = "*"
+Flask-RESTful = "*"
+Flask-SQLAlchemy = "*"
+Flask-JWT-Extended = "*"
+uWSGI = "*"
+
+[dev-packages]
+
+[requires]
+python_version = "3.9"
