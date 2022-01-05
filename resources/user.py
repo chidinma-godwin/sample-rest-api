@@ -1,3 +1,4 @@
+import traceback
 from flask_restful import Resource
 from flask import request
 from flask_jwt_extended import (
@@ -19,8 +20,8 @@ from messages import (
     INVALID_CREDENTIALS,
     LOGGED_OUT,
     NO_ADMIN_ACCESS,
+    NOT_ACTIVATED,
     NOT_FOUND,
-    REQUIRED_FIELD,
     UNAUTHORISED,
     UNEXPECTED_ERROR,
     USER_ALREADY_EXIST,
@@ -67,14 +68,18 @@ class UserRegister(Resource):
     def post(cls):
         data = user_schema.load(request.get_json())
 
-        if UserModel.find_by_username(data["username"]):
+        if UserModel.find_by_username(data["username"]) or UserModel.find_by_email(
+            data["email"]
+        ):
             return {"msg": USER_ALREADY_EXIST}, 400
 
         newUser = UserModel(**data)
 
         try:
             newUser.save_user()
+            newUser.send_confirmation_email()
         except:
+            traceback.print_exc()
             return {"msg": UNEXPECTED_ERROR}, 500
 
         return {"msg": USER_CREATED}, 201
@@ -83,13 +88,15 @@ class UserRegister(Resource):
 class UserLogin(Resource):
     @classmethod
     def post(cls):
-        data = user_schema.load(request.get_json())
+        data = user_schema.load(request.get_json(), partial=("email",))
         user = UserModel.find_by_username(data["username"])
 
         if user and safe_str_cmp(user.password, data["password"]):
-            access_token = create_access_token(identity=user.id, fresh=True)
-            refresh_token = create_refresh_token(user.id)
-            return {"access_token": access_token, "refresh_token": refresh_token}
+            if user.activated:
+                access_token = create_access_token(identity=user.id, fresh=True)
+                refresh_token = create_refresh_token(user.id)
+                return {"access_token": access_token, "refresh_token": refresh_token}
+            return {"msg": NOT_ACTIVATED}, 401
 
         return {"msg": INVALID_CREDENTIALS}, 401
 
@@ -111,3 +118,15 @@ class TokenRefresh(Resource):
         current_user_id = get_jwt_identity()
         new_token = create_access_token(current_user_id, fresh=False)
         return {"access_token": new_token}
+
+
+class UserConfirm(Resource):
+    @classmethod
+    def get(cls, user_id: int):
+        user = UserModel.find_by_id(user_id)
+        if not user:
+            return {"msg": "User not found"}, 404
+        user.activated = True
+        user.save_user()
+        # return redirect('<some-frontend-url>')
+        return {"msg": "User confirmed"}

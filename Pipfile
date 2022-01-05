@@ -12,6 +12,7 @@ uWSGI = "*"
 marshmallow = "*"
 flask-marshmallow = "*"
 marshmallow-sqlalchemy = "*"
+requests = "*"
 
 [dev-packages]
 black = "*"

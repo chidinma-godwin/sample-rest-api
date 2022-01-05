@@ -6,7 +6,15 @@ from marshmallow import ValidationError
 
 from resources.item import ItemList, Item
 from resources.store import Store, StoreList
-from resources.user import Logout, TokenRefresh, User, UserRegister, UserLogin, UserList
+from resources.user import (
+    Logout,
+    TokenRefresh,
+    User,
+    UserConfirm,
+    UserRegister,
+    UserLogin,
+    UserList,
+)
 from models.token_block import TokenBlockModel
 from models.user import UserModel
 from messages import TOKEN_REVOKED_ERR, TOKEN_REVOKED_MSG
@@ -70,6 +78,7 @@ api.add_resource(UserLogin, "/login")
 api.add_resource(UserList, "/users")
 api.add_resource(TokenRefresh, "/refresh-token")
 api.add_resource(Logout, "/logout")
+api.add_resource(UserConfirm, "/user-confirm/<int:user_id>")
 
 
 if __name__ == "__main__":
