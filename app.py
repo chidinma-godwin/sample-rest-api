@@ -36,12 +36,6 @@ def handle_marshmallow_validation_error(err):
 jwt = JWTManager(app)
 
 
-@app.before_first_request
-def create_tables():
-    db.create_all()
-    db.session.commit()
-
-
 @jwt.additional_claims_loader
 def add_claims_to_token(identity):
     if os.environ.get("ADMIN_ID") == str(identity):
@@ -86,4 +80,10 @@ if __name__ == "__main__":
 
     db.init_app(app)
     ma.init_app(app)
+
+    @app.before_first_request
+    def create_tables():
+        db.create_all()
+        db.session.commit()
+
     app.run(port=5000, debug=True)
