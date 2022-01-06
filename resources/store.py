@@ -19,7 +19,7 @@ class Store(Resource):
     def post(cls, name: str):
         store = StoreModel.find_store(name)
 
-        if store is None:
+        if not store:
             store = StoreModel(name=name)
         else:
             store.name = name

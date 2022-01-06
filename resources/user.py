@@ -12,6 +12,7 @@ from flask_jwt_extended import (
 from werkzeug.security import safe_str_cmp
 from datetime import datetime, timezone
 from libs.mailgun import MailgunException
+from models.confirmation import ConfirmationModel
 
 
 from models.token_block import TokenBlockModel
@@ -27,6 +28,7 @@ from messages import (
     UNEXPECTED_ERROR,
     USER_ALREADY_EXIST,
     USER_CREATED,
+    EMAIL_ALREADY_USED,
 )
 from models.user import UserModel
 from schemas.user import UserSchema
@@ -69,21 +71,25 @@ class UserRegister(Resource):
     def post(cls):
         data = user_schema.load(request.get_json())
 
-        if UserModel.find_by_username(data["username"]) or UserModel.find_by_email(
-            data["email"]
-        ):
+        if UserModel.find_by_username(data["username"]):
             return {"msg": USER_ALREADY_EXIST}, 400
+
+        if UserModel.find_by_email(data["email"]):
+            return {"msg": EMAIL_ALREADY_USED}, 400
 
         newUser = UserModel(**data)
 
         try:
             newUser.save_user()
+            confirmation = ConfirmationModel(newUser.id)
+            confirmation.save_to_db()
             newUser.send_confirmation_email()
         except MailgunException as e:
             newUser.delete_from_db()
             return {"msg": REGISTRATION_FAILED}
         except:
             traceback.print_exc()
+            newUser.delete_from_db()
             return {"msg": UNEXPECTED_ERROR}, 500
 
         return {"msg": USER_CREATED}, 201
@@ -96,7 +102,8 @@ class UserLogin(Resource):
         user = UserModel.find_by_username(data["username"])
 
         if user and safe_str_cmp(user.password, data["password"]):
-            if user.activated:
+            confirmation = user.most_recent_confirmation
+            if confirmation and confirmation.confirmed:
                 access_token = create_access_token(identity=user.id, fresh=True)
                 refresh_token = create_refresh_token(user.id)
                 return {"access_token": access_token, "refresh_token": refresh_token}
@@ -122,15 +129,3 @@ class TokenRefresh(Resource):
         current_user_id = get_jwt_identity()
         new_token = create_access_token(current_user_id, fresh=False)
         return {"access_token": new_token}
-
-
-class UserConfirm(Resource):
-    @classmethod
-    def get(cls, user_id: int):
-        user = UserModel.find_by_id(user_id)
-        if not user:
-            return {"msg": "User not found"}, 404
-        user.activated = True
-        user.save_user()
-        # return redirect('<some-frontend-url>')
-        return {"msg": "User confirmed"}

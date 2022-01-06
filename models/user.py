@@ -5,6 +5,7 @@ from requests import Response, post
 
 from db import db
 from libs.mailgun import Mailgun
+from models.confirmation import ConfirmationModel
 
 
 class UserModel(db.Model):
@@ -13,7 +14,9 @@ class UserModel(db.Model):
     username = db.Column(db.String(50), nullable=False, unique=True)
     email = db.Column(db.String(50), nullable=False, unique=True)
     password = db.Column(db.String(50), nullable=False)
-    activated = db.Column(db.Boolean(), default=False, nullable=False)
+    confirmations = db.relationship(
+        "ConfirmationModel", lazy="dynamic", cascade="all, delete-orphan"
+    )
 
     @classmethod
     def find_all(cls) -> List["UserModel"]:
@@ -39,8 +42,20 @@ class UserModel(db.Model):
         db.session.delete(self)
         db.session.commit()
 
+    @property
+    def most_recent_confirmation(self):
+        return self.confirmations.order_by(
+            db.desc(ConfirmationModel.expired_at)
+        ).first()
+
+    @classmethod
+    def find_confirmations_by_user(cls, user: "UserModel"):
+        return user.confirmations.order_by(db.desc(ConfirmationModel.expired_at)).all()
+
     def send_confirmation_email(self) -> Response:
-        link = request.url_root[:-1] + url_for("userconfirm", user_id=self.id)
+        link = request.url_root[:-1] + url_for(
+            "confirmation", confirmation_id=self.most_recent_confirmation.id
+        )
         MAILGUN_DOMAIN = os.environ.get("MAILGUN_DOMAIN")
         MAILGUN_API_KEY = os.environ.get("MAILGUN_API_KEY")
         return Mailgun.send_email(

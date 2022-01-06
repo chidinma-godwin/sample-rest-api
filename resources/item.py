@@ -29,7 +29,7 @@ class Item(Resource):
         data = item_schema.load(item_json)
         item = ItemModel.find_item(name)
 
-        if item is None:
+        if not item:
             item = ItemModel(**data)
         else:
             item.price = data["price"]
