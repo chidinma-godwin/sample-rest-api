@@ -3,6 +3,7 @@ from flask import Flask, jsonify
 from flask_restful import Api
 from flask_jwt_extended import JWTManager
 from marshmallow import ValidationError
+from dotenv import load_dotenv
 
 from resources.item import ItemList, Item
 from resources.store import Store, StoreList
@@ -21,10 +22,11 @@ from messages import TOKEN_REVOKED_ERR, TOKEN_REVOKED_MSG
 from ma import ma
 
 app = Flask(__name__)
-app.secret_key = os.environ.get("APP_SECRET")
-app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
-app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get("DATABASE_URI")
-app.config["PROPAGATE_EXCEPTIONS"] = True
+
+load_dotenv(".env")
+app.config.from_object("default_config")
+app.config.from_envvar("APPLICATION_SETTINGS")
+
 api = Api(app)
 
 
