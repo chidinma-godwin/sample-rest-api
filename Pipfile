@@ -13,6 +13,7 @@ marshmallow = "*"
 flask-marshmallow = "*"
 marshmallow-sqlalchemy = "*"
 requests = "*"
+flask-reuploaded = "*"
 
 [dev-packages]
 black = "*"

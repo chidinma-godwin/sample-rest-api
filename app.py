@@ -3,7 +3,7 @@ from flask import Flask, jsonify
 from flask_restful import Api
 from flask_jwt_extended import JWTManager
 from marshmallow import ValidationError
-from dotenv import load_dotenv
+from flask_uploads import configure_uploads
 
 from resources.item import ItemList, Item
 from resources.store import Store, StoreList
@@ -20,12 +20,14 @@ from models.token_block import TokenBlockModel
 from models.user import UserModel
 from messages import TOKEN_REVOKED_ERR, TOKEN_REVOKED_MSG
 from ma import ma
+from resources.image import ImageUpload, Image
+from libs.image_helper import IMAGE_SET
 
 app = Flask(__name__)
 
-load_dotenv(".env")
 app.config.from_object("default_config")
 app.config.from_envvar("APPLICATION_SETTINGS")
+configure_uploads(app, IMAGE_SET)
 
 api = Api(app)
 
@@ -76,6 +78,8 @@ api.add_resource(TokenRefresh, "/refresh-token")
 api.add_resource(Logout, "/logout")
 api.add_resource(Confirmation, "/user-confirm/<string:confirmation_id>")
 api.add_resource(ConfirmationByUser, "/confirmation/<int:user_id>")
+api.add_resource(ImageUpload, "/upload/image")
+api.add_resource(Image, "/image/<string:filename>")
 
 
 if __name__ == "__main__":
@@ -89,4 +93,4 @@ if __name__ == "__main__":
         db.create_all()
         db.session.commit()
 
-    app.run(port=5000, debug=True)
+    app.run(port=5000)
